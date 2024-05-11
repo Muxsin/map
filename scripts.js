@@ -30,3 +30,37 @@ function drawLinesFromObject(coordObject) {
         }
     }
 }
+
+let coordinates = {
+    'Rudaki': [
+        [1, 2],
+        [5, 2],
+        [7, 2],
+        [98, 2],
+    ],
+    'Somoni': [
+        [3, 62],
+        [6, 5],
+        [13, 25],
+        [16, 23],
+    ],
+};
+
+function calcHypotenuse(x1, y1, x2, y2){
+    return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+}
+
+function findNearestStreet(x, y, coordinates) {
+    const streets = [];
+
+    for (const [key, value] of Object.entries(coordinates)) {
+        for (let i = 0; i < value.length; i++) {
+            const distance = calcHypotenuse(x, y, value[i][0], value[i][1]);
+            streets.push({ name: key, distance });
+        }
+    }
+
+    streets.sort((a, b) => a.distance - b.distance);
+
+    return streets[0];
+}
