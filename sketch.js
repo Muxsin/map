@@ -13,9 +13,36 @@ const settings = {
     }
 }
 
-const pins = [];
-
-let json = null;
+let json = [
+    {
+        longitude: -73.8586268225073,
+        latitude: 40.9001355654965,
+    },
+    {
+        longitude: -73.85861181024539,
+        latitude: 40.90012974258792,
+    },
+    {
+        longitude: -73.85780289628592,
+        latitude: 40.89981599003261,
+    },
+    {
+        longitude: -73.85780289628592,
+        latitude: 41.89981599003261,
+    },
+    {
+        longitude: -73.85780289628592,
+        latitude: 43.89981599003261,
+    },
+    {
+        longitude: -74.85780289628592,
+        latitude: 43.89981599003261,
+    },
+    {
+        longitude: -75.85780289628592,
+        latitude: 43.89981599003261,
+    },
+];
 
 function setup() {
     createCanvas(settings.area.width, settings.area.height);
@@ -25,87 +52,45 @@ function draw() {
     background(settings.style.background_color);
 
     drawData(json);
+
+    noLoop();
 }
 
 function drawData(json) {
-    circle((100 - settings.origin.x) * settings.scale, (100 - settings.origin.y) * settings.scale, 50 * settings.scale);
-    circle((100 - settings.origin.x) * settings.scale, (200 - settings.origin.y) * settings.scale, 50 * settings.scale);
-    circle((300 - settings.origin.x) * settings.scale, (300 - settings.origin.y) * settings.scale, 50 * settings.scale);
+    for(let i = 0; i < json.length - 1; i++) {
+        let posX1 = (((180 + json[i].longitude) * settings.area.width) / 360) * settings.scale + settings.origin.x;
+        let posY1 = (((90 + json[i].latitude) * settings.area.height) / 180) * settings.scale + settings.origin.y;
+
+        let posX2 = (((180 + json[i + 1].longitude) * settings.area.width) / 360) * settings.scale + settings.origin.x;
+        let posY2 = (((90 + json[i + 1].latitude) * settings.area.height) / 180)  * settings.scale + settings.origin.y;
+
+        strokeWeight(2 * settings.scale);
+
+        line(posX1, posY1, posX2, posY2);
+    }
+
+    circle(100 * settings.scale + settings.origin.x, 100 * settings.scale + settings.origin.y, 30 * settings.scale);
+}
+
+function mouseClicked() {
+    let posX = (mouseX * 360) / settings.area.width - 180;
+    let posY = (mouseY * 180) / settings.area.height - 90;
 }
 
 function mouseDragged(event) {
-    settings.origin.x -= event.movementX / settings.scale;
-    settings.origin.y -= event.movementY / settings.scale;
+    settings.origin.x += event.movementX;
+    settings.origin.y += event.movementY;
+
+    redraw();
 }
 
 function mouseWheel(event) {
-    if (event.delta > 0) {
-        settings.scale /= 2;
-    } else if (event.delta < 0) {
-        settings.scale *= 2;
+    console.log(event);
+    if (event.delta < 0) {
+        settings.scale *= 1.5;
+    } else if (event.delta > 0) {
+        settings.scale /= 1.5;
     }
-}
 
-// TODO
-function shouldHighlight() {
-    return false;
-}
-
-// TODO
-function getDistance() {
-    return 100;
-}
-
-let MULTILINESTRING = "MULTILINESTRING ((\
-    -73.8586268225073 40.9001355654965, \
-    -73.85861181024539 40.90012974258792), (\
-    -73.85861181024539 40.90012974258792, \
-    -73.85780289628592 40.89981599003261), (\
-    -73.85780289628592 40.89981599003261, -73.85699713081578 40.899503580105225), (-73.85699713081578 40.899503580105225, -73.85619318252682 40.89918797006852), (-73.85619318252682 40.89918797006852, -73.8553866249815 40.89887621331628), (-73.8553866249815 40.89887621331628, -73.85429882761572 40.898449654555904, -73.854297298002 40.89844906370817), (-73.854297298002 40.89844906370817, -73.85343375740602 40.89811538004769), (-73.85343375740602 40.89811538004769, -73.85261600475545 40.89781183086894))";
-
-function parseGeoData() {
-    return [
-        {
-            longitude: -73.8586268225073,
-            latitude: 40.9001355654965,
-        },
-        {
-            longitude: -73.85861181024539,
-            latitude: 40.90012974258792,
-        },
-        {
-            longitude: -73.85861181024539,
-            latitude: 40.90012974258792,
-        },
-        {
-            longitude: -73.85780289628592,
-            latitude: 40.89981599003261,
-        },
-        //...
-    ];
-}
-
-// TODO
-function drawStreet() {
-
-}
-
-// TODO (apply origin and scale) For one vertex
-function normalizeVertex(x, y) {
-    return {
-        x: 1,
-        y: 2,
-    };
-}
-
-
-function handleClick(x, y) {
-
-}
-
-function convertGeoPoint(longitude, latitude) {
-    return {
-        x: 1,
-        y: 2,
-    }
+    redraw();
 }
