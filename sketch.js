@@ -44,6 +44,25 @@ let json = [
     },
 ];
 
+
+function parseGeoData(get_data) {
+    const regex = /(-?\d+\.\d+ \d+\.\d+)/g;
+
+    let match;
+    const coordinates = [];
+
+    while ((match = regex.exec(get_data)) !== null) {
+        obj = { longitude: Number(match[0].split(" ")[0]), latitude: Number(match[0].split(" ")[1]) }
+        coordinates.push(obj);
+    }
+
+    return coordinates;
+}
+
+json = fetch("./ny.json")
+    .then(response => response.json())
+    .then(data => data['data']);
+
 function setup() {
     createCanvas(settings.area.width, settings.area.height);
 }
@@ -51,20 +70,24 @@ function setup() {
 function draw() {
     background(settings.style.background_color);
 
-    drawData(json);
+    json.then(data => {
+        for (let i = 0; i < data.length; i++) {
+            drawData(parseGeoData(data[i][8]));
+        }
+    });
 
     noLoop();
 }
 
 function drawData(json) {
-    for(let i = 0; i < json.length - 1; i++) {
+    for (let i = 0; i < json.length - 1; i++) {
         let posX1 = (((180 + json[i].longitude) * settings.area.width) / 360) * settings.scale + settings.origin.x;
         let posY1 = (((90 + json[i].latitude) * settings.area.height) / 180) * settings.scale + settings.origin.y;
 
         let posX2 = (((180 + json[i + 1].longitude) * settings.area.width) / 360) * settings.scale + settings.origin.x;
-        let posY2 = (((90 + json[i + 1].latitude) * settings.area.height) / 180)  * settings.scale + settings.origin.y;
+        let posY2 = (((90 + json[i + 1].latitude) * settings.area.height) / 180) * settings.scale + settings.origin.y;
 
-        strokeWeight(2 * settings.scale);
+        strokeWeight(2);
 
         line(posX1, posY1, posX2, posY2);
     }
