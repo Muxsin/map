@@ -1,7 +1,7 @@
-let s = 1;
+let s = 410.18627024600187;
 let ds = 1.2;
-let ox = -180;
-let oy = 90;
+let ox = -74.38765942050578;
+let oy = 40.93079715295632;
 
 let data = [];
 
@@ -57,7 +57,6 @@ function mouseDragged(event) {
 
 function setup() {
     createCanvas(1440, 720);
-    fill(0);
     noStroke();
 }
 
@@ -88,9 +87,15 @@ function drawData() {
             )
         );
 
-        result.forEach((coord) => {
-            circle(coord[0], coord[1], 1);
-        });
+        beginShape();
+
+        result.forEach(coord => {
+            vertex(coord[0], coord[1]);
+        })
+
+        endShape();
+        stroke(0);
+        strokeWeight(2);
     });
 }
 
