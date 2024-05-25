@@ -1,119 +1,116 @@
-const settings = {
-    scale: 1,
-    origin: {
-        x: 0,
-        y: 0,
-    },
-    area: {
-        width: 1300,
-        height: 825,
-    },
-    style: {
-        background_color: 240
-    }
+let s = 1;
+let ds = 1.2;
+let ox = -180;
+let oy = 90;
+
+let data = [];
+
+fetch("./ny.json")
+    .then((response) => response.json())
+    .then((json) => {
+        data = json["data"];
+    });
+
+function normalize(x, y) {
+    let wppg = width / (360 / s);
+    let hppg = height / (180 / s);
+    let nx = x - ox;
+    let ny = oy - y;
+
+    return [nx * wppg, ny * hppg];
 }
 
-let json = [
-    {
-        longitude: -73.8586268225073,
-        latitude: 40.9001355654965,
-    },
-    {
-        longitude: -73.85861181024539,
-        latitude: 40.90012974258792,
-    },
-    {
-        longitude: -73.85780289628592,
-        latitude: 40.89981599003261,
-    },
-    {
-        longitude: -73.85780289628592,
-        latitude: 41.89981599003261,
-    },
-    {
-        longitude: -73.85780289628592,
-        latitude: 43.89981599003261,
-    },
-    {
-        longitude: -74.85780289628592,
-        latitude: 43.89981599003261,
-    },
-    {
-        longitude: -75.85780289628592,
-        latitude: 43.89981599003261,
-    },
-];
+function mouseWheel(event) {
+    console.log(event.clientX);
+    let wgpp = 360 / s / width;
+    let hgpp = 180 / s / height;
 
+    let nmx = ox + event.clientX * wgpp;
+    let nmy = oy - event.clientY * hgpp;
 
-function parseGeoData(get_data) {
+    if (event.delta < 0) {
+        s *= ds;
+    }
+
+    if (event.delta > 0) {
+        s /= ds;
+    }
+
+    ox = nmx - 360 / s / 2;
+    oy = nmy + 180 / s / 2;
+
+    redraw();
+}
+
+function mouseDragged(event) {
+    let wgpp = 360 / s / width;
+    let hgpp = 180 / s / height;
+
+    let dx = event.movementX * wgpp;
+    let dy = event.movementY * hgpp;
+
+    ox -= dx;
+    oy += dy;
+
+    redraw();
+}
+
+function setup() {
+    createCanvas(1440, 720);
+    fill(0);
+    noStroke();
+}
+
+function draw() {
+    background(240);
+    drawData();
+    noLoop();
+}
+
+function drawData() {
+    data.forEach((elem) => {
+        let coord = geoConvert(elem[8]);
+        let result = [normalize(coord[0]["longitude"], coord[0]["latitude"])];
+
+        for (let i = 1; i < coord.length - 1; i++) {
+            let coord1 = normalize(coord[i]["longitude"], coord[i]["latitude"]);
+            if (calcDistance(result[result.length - 1], coord1) < 2) {
+                continue;
+            }
+
+            result.push(coord1);
+        }
+
+        result.push(
+            normalize(
+                coord[coord.length - 1]["longitude"],
+                coord[coord.length - 1]["latitude"]
+            )
+        );
+
+        result.forEach((coord) => {
+            circle(coord[0], coord[1], 1);
+        });
+    });
+}
+
+function geoConvert(input) {
     const regex = /(-?\d+\.\d+ \d+\.\d+)/g;
 
     let match;
     const coordinates = [];
 
-    while ((match = regex.exec(get_data)) !== null) {
-        obj = { longitude: Number(match[0].split(" ")[0]), latitude: Number(match[0].split(" ")[1]) }
+    while ((match = regex.exec(input)) !== null) {
+        obj = {
+            longitude: Number(match[0].split(" ")[0]),
+            latitude: Number(match[0].split(" ")[1]),
+        };
         coordinates.push(obj);
     }
 
     return coordinates;
 }
 
-json = fetch("./ny.json")
-    .then(response => response.json())
-    .then(data => data['data']);
-
-function setup() {
-    createCanvas(settings.area.width, settings.area.height);
-}
-
-function draw() {
-    background(settings.style.background_color);
-
-    json.then(data => {
-        for (let i = 0; i < data.length; i++) {
-            drawData(parseGeoData(data[i][8]));
-        }
-    });
-
-    noLoop();
-}
-
-function drawData(json) {
-    for (let i = 0; i < json.length - 1; i++) {
-        let posX1 = (((180 + json[i].longitude) * settings.area.width) / 360) * settings.scale + settings.origin.x;
-        let posY1 = (((90 + json[i].latitude) * settings.area.height) / 180) * settings.scale + settings.origin.y;
-
-        let posX2 = (((180 + json[i + 1].longitude) * settings.area.width) / 360) * settings.scale + settings.origin.x;
-        let posY2 = (((90 + json[i + 1].latitude) * settings.area.height) / 180) * settings.scale + settings.origin.y;
-
-        strokeWeight(2);
-
-        line(posX1, posY1, posX2, posY2);
-    }
-
-    circle(100 * settings.scale + settings.origin.x, 100 * settings.scale + settings.origin.y, 30 * settings.scale);
-}
-
-function mouseClicked() {
-    let posX = (mouseX * 360) / settings.area.width - 180;
-    let posY = (mouseY * 180) / settings.area.height - 90;
-}
-
-function mouseDragged(event) {
-    settings.origin.x += event.movementX;
-    settings.origin.y += event.movementY;
-
-    redraw();
-}
-
-function mouseWheel(event) {
-    console.log(event);
-    if (event.delta < 0) {
-        settings.scale *= 1.5;
-    } else if (event.delta > 0) {
-        settings.scale /= 1.5;
-    }
-
-    redraw();
+function calcDistance(xy1, xy2) {
+    return Math.sqrt(Math.pow(xy2[0] - xy1[0], 2) + Math.pow(xy2[1] - xy1[1], 2));
 }
